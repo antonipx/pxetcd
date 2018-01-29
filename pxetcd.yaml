@@ -1,0 +1,73 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: px-etcd-sc
+provisioner: kubernetes.io/portworx-volume
+parameters:
+  repl: "3"
+  shared: "true"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: px-etcd-pvc
+  annotations:
+    volume.beta.kubernetes.io/storage-class: px-etcd-sc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcdinst
+  name: etclb
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 30304
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: etcdinst
+    tier: frontend
+  sessionAffinity: None
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: etcdinst
+  labels:
+    app: etcdinst
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: etcdinst
+        tier: frontend
+    spec:
+      nodeSelector:
+        type: app
+      containers:
+      - name: etcdinst
+        image: httpd
+        imagePullPolicy: 
+        ports:
+        - containerPort: 80
+          name: etcdinst
+        volumeMounts:
+        - name: httpd-storage
+          mountPath: /usr/local/apache2/htdocs/
+      volumes:
+      - name: httpd-storage
+        persistentVolumeClaim:
+          claimName: px-etcd-pvc
