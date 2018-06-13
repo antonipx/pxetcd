@@ -1,5 +1,8 @@
 #!/bin/bash -e
 # TODO: snapshots, quota, encryption
+#       check for existing install
+#       option to use existing etcd binary
+#       test etcd with etcdctl
 
 IP_ADDRESSES=("192.168.120.1" "192.168.121.29" "192.168.122.1")
 ENCRYPTION="none"
@@ -7,7 +10,7 @@ INITIAL_TOKEN="pxetcd1"
 NODE_PREFIX="px"
 CLIENT_PORT="9017"
 PEER_PORT="9018"
-DIRECTORY="/opt/pwx/etcd"
+DIRECTORY="/opt/pxetcd"
 VERSION="v3.2.12"
 USER="pxetcd"
 
